@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+
+    {% if errors %}
+        <ul style="color: red;">
+        {% for error in errors %}
+            <li>{{ error.loc[0] }}: {{ error.msg }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% if user %}
+    <p style="color: green;">Profile saved successfully! (ID: {{ user.id }})</p>
+{% endif %}
+
+    <form action="/user-profile" method="post">
+        <input type="hidden" name="user_id" value="{{ user.id if user else '' }}">
+
+        <label>Name:</label>
+        <input type="text" name="name" value="{{ user.name if user else '' }}"><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" value="{{ user.email if user else '' }}"><br>
+
+        <label>Bio:</label>
+        <textarea name="bio">{{ user.bio if user else '' }}</textarea><br>
+
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>
