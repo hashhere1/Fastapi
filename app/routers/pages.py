@@ -9,6 +9,8 @@ from app.models.user import User
 from fastapi.templating import Jinja2Templates
 from app.schemas.user import UserCreate, UserUpdate
 from fastapi.responses import RedirectResponse
+from typing import Annotated
+from app.utils.file_upload import upload_image
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -42,45 +44,43 @@ def get_user(request: Request, user_id: int, db: Session = Depends(get_db)):
 @router.post("/users")
 def save_user_profile(
     request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    bio: str = Form(""),
+    user_data: Annotated[UserCreate, Depends(UserCreate.as_form)],
     profile_pic: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    upload_directory = "app/uploads/profile_pictures"
-    os.makedirs(upload_directory, exist_ok=True)
-
-    filename = f"{uuid.uuid4()}_{profile_pic.filename}"
-    file_path = os.path.join(upload_directory, filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(profile_pic.file, buffer)
-
-    user_data = UserCreate(name=name, email=email, bio=bio)
+    try:
+        file_path = upload_image(profile_pic)
+    except HTTPException as e:
+        return templates.TemplateResponse(
+            request,
+            "user_profile.html",
+            {
+                "user": None,
+                "errors": [e.detail]
+            }
+        )
 
     user = User(name = user_data.name, email = user_data.email, bio = user_data.bio, profile_pic = file_path)
 
     db.add(user)
     db.commit()
     db.refresh(user)
-    return templates.TemplateResponse(request, "user_profile.html", {"user": user})
+    return RedirectResponse(
+        url="/users",
+        status_code=303
+    )
 
 @router.patch("/users/{user_id}")
 def update_user(
     request: Request,
     user_id: int,
-    name: str | None = Form(None),
-    email: str | None = Form(None),
-    bio: str | None = Form(None),
+    user_data: Annotated[UserUpdate, Depends(UserUpdate.as_form)],
     profile_pic: UploadFile | None = File(None),
     db: Session = Depends(get_db)
                 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    user_data = UserUpdate(name=name, email=email, bio=bio)
 
     if user_data.name is not None:
         user.name = user_data.name
@@ -91,21 +91,29 @@ def update_user(
     if user_data.bio is not None:
         user.bio = user_data.bio
 
-    if profile_pic:
-        upload_dir = "app/uploads/profile_pictures"
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = f"{uuid.uuid4()}_{profile_pic.filename}"
-        file_path = os.path.join(upload_dir, filename)
+    
+    try:
+        if profile_pic:
+            file_path = upload_image(profile_pic)
 
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(profile_pic.file, buffer)
-
-        user.profile_pic = file_path
+            user.profile_pic = file_path
+    except HTTPException as e:
+        return templates.TemplateResponse(
+            request,
+            "user_profile.html",
+            {
+                "user": user,
+                "errors": [e.detail],
+            }
+        )
 
     db.commit()
     db.refresh(user)
 
-    return templates.TemplateResponse(request, "user_profile.html", {"user":user})
+    return RedirectResponse(
+        url="/users",
+        status_code=303
+    )
 
 @router.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
