@@ -1,17 +1,17 @@
 from fastapi import FastAPI
-from database import engine
+from app.routers import pages
+from app.database import Base, engine
+from app.middleware import TimeTrackingMiddleware
+from app.models.page_visit import PageVisit
+from app.models.user import User
+from fastapi.staticfiles import StaticFiles
+import uvicorn
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, FastAPI is working!"}
+app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
+app.add_middleware(TimeTrackingMiddleware)
+app.include_router(pages.router)
 
-@app.get("/test-db")
-def test_db():
-    try:
-        connection = engine.connect()
-        connection.close()
-        return {"status": "Database connected successfully!"}
-    except Exception as e:
-        return {"status": "Connection failed", "error": str(e)}
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
