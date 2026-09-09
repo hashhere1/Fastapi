@@ -8,10 +8,11 @@ class TimeTrackingMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
         response = await call_next(request)
         duration = time.time() - start_time
+        client_ip = request.client.host
 
         db = SessionLocal()
         try:
-            visit = PageVisit(path=request.url.path, duration=duration)
+            visit = PageVisit(path=request.url.path, duration=duration, client_ip=client_ip)
             db.add(visit)
             db.commit()
         finally:
