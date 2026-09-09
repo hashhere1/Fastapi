@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Users</title>
 </head>
+
 <body>
 
     <h1>All Users</h1>
 
-    <a href="/users/new">Create New User</a>
+    <a href="/users/new">
+        Create New User
+    </a>
 
     <hr>
 
     {% if users %}
+
         <table border="1" cellpadding="10">
+
             <thead>
                 <tr>
                     <th>ID</th>
@@ -25,35 +31,64 @@
             </thead>
 
             <tbody>
+
                 {% for user in users %}
+
                     <tr>
-                        <td>{{ user.id }}</td>
 
                         <td>
-                            <img
-                                src="/{{ user.profile_pic }}"
-                                alt="Profile picture"
-                                width="80"
-                                height="80"
-                            >
+                            {{ user.id }}
                         </td>
 
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.bio }}</td>
+                        <td>
+
+                            {% if user.profile_pic %}
+
+                                <img
+                                    src="/uploads/{{ user.profile_pic }}"
+                                    alt="Profile Picture"
+                                    width="80"
+                                    height="80"
+                                >
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ user.name }}
+                        </td>
+
+                        <td>
+                            {{ user.email }}
+                        </td>
+
+                        <td>
+                            {{ user.bio }}
+                        </td>
 
                         <td>
                             <a href="/users/{{ user.id }}">
                                 View / Edit
                             </a>
                         </td>
+
                     </tr>
+
                 {% endfor %}
+
             </tbody>
+
         </table>
+
     {% else %}
-        <p>No users found.</p>
+
+        <p>
+            No users found.
+        </p>
+
     {% endif %}
 
 </body>
+
 </html>

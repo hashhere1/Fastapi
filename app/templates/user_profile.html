@@ -1,148 +1,239 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>User Profile</title>
 </head>
+
 <body>
 
     <h1>User Profile</h1>
 
+    <!-- Display validation/upload errors -->
     {% if errors %}
         <ul style="color: red;">
             {% for error in errors %}
-                <li>{{ error.loc[0] }}: {{ error.msg }}</li>
+                <li>{{ error }}</li>
             {% endfor %}
         </ul>
     {% endif %}
 
+
+    <!-- Display user information when editing -->
     {% if user %}
+
         <p style="color: green;">
             User loaded successfully! (ID: {{ user.id }})
         </p>
 
         {% if user.profile_pic %}
+
             <img
-                src="/{{ user.profile_pic }}"
+                src="/uploads/{{ user.profile_pic }}"
                 alt="Profile Picture"
                 width="150"
                 height="150"
             >
-            <br><br>
+
+            <br>
+            <br>
+
         {% endif %}
+
     {% endif %}
 
 
+    <!-- Create / Update form -->
     <form
         id="userForm"
         enctype="multipart/form-data"
     >
 
         <label>Name:</label>
+
         <input
             type="text"
             name="name"
             value="{{ user.name if user else '' }}"
             required
         >
-        <br><br>
+
+        <br>
+        <br>
 
 
         <label>Email:</label>
+
         <input
             type="email"
             name="email"
             value="{{ user.email if user else '' }}"
             required
         >
-        <br><br>
+
+        <br>
+        <br>
 
 
         <label>Bio:</label>
+
         <textarea name="bio">{{ user.bio if user else '' }}</textarea>
-        <br><br>
+
+        <br>
+        <br>
 
 
         <label>Profile Picture:</label>
+
         <input
             type="file"
             name="profile_pic"
             accept="image/*"
             {% if not user %}required{% endif %}
         >
-        <br><br>
+
+        <br>
+        <br>
 
 
         <button type="submit">
+
             {% if user %}
                 Update
             {% else %}
                 Create
             {% endif %}
+
         </button>
 
     </form>
 
+
     <br>
 
+
+    <!-- Delete button only when editing an existing user -->
     {% if user %}
-        <button id="deleteBtn" style="background-color: red; color: white;">
+
+        <button
+            id="deleteBtn"
+            style="background-color: red; color: white;"
+        >
             Delete User
         </button>
-        <br><br>
+
+        <br>
+        <br>
+
     {% endif %}
 
-    <a href="/users">Back to Users</a>
+
+    <a href="/users">
+        Back to Users
+    </a>
 
 
     <script>
+
         const form = document.getElementById("userForm");
 
-        form.addEventListener("submit", async function(event) {
-            event.preventDefault();
+        form.addEventListener(
+            "submit",
+            async function(event) {
 
-            const formData = new FormData(form);
+                event.preventDefault();
 
-            {% if user %}
-                const url = "/users/{{ user.id }}";
-                const method = "PATCH";
-            {% else %}
-                const url = "/users";
-                const method = "POST";
-            {% endif %}
+                const formData = new FormData(form);
 
-            const response = await fetch(url, {
-                method: method,
-                body: formData
-            });
 
-            if (response.ok) {
-                window.location.href = "/users";
-            } else {
-                const data = await response.json();
-                alert(data.detail || "Something went wrong.");
+                {% if user %}
+
+                    const url = "/users/{{ user.id }}";
+                    const method = "PATCH";
+
+                {% else %}
+
+                    const url = "/users";
+                    const method = "POST";
+
+                {% endif %}
+
+
+                const response = await fetch(
+                    url,
+                    {
+                        method: method,
+                        body: formData
+                    }
+                );
+
+
+                if (response.ok) {
+
+                    window.location.href = "/users";
+
+                } else {
+
+                    // Backend may return HTML when showing
+                    // validation/upload errors.
+                    const html = await response.text();
+
+                    document.open();
+                    document.write(html);
+                    document.close();
+
+                }
+
             }
-        });
+        );
+
 
         {% if user %}
-            const deleteBtn = document.getElementById("deleteBtn");
 
-            deleteBtn.addEventListener("click", async function() {
-                const confirmDelete = confirm("Are you sure you want to delete this user?");
+            const deleteBtn =
+                document.getElementById("deleteBtn");
 
-                if (confirmDelete) {
-                    const response = await fetch("/users/{{ user.id }}", {
-                        method: "DELETE"
-                    });
 
-                    if (response.ok) {
-                        window.location.href = "/users";
-                    } else {
-                        alert("Failed to delete user.");
+            deleteBtn.addEventListener(
+                "click",
+                async function() {
+
+                    const confirmDelete = confirm(
+                        "Are you sure you want to delete this user?"
+                    );
+
+
+                    if (confirmDelete) {
+
+                        const response = await fetch(
+                            "/users/{{ user.id }}",
+                            {
+                                method: "DELETE"
+                            }
+                        );
+
+
+                        if (response.ok) {
+
+                            window.location.href = "/users";
+
+                        } else {
+
+                            alert(
+                                "Failed to delete user."
+                            );
+
+                        }
+
                     }
+
                 }
-            });
+            );
+
         {% endif %}
+
     </script>
 
 </body>
+
 </html>
