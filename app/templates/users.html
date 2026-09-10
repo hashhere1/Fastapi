@@ -7,13 +7,31 @@
 
 <body>
 
-    <h1>All Users</h1>
+    <header>
+        <nav>
+            <a href="/">Home</a> |
+            <a href="/about">About</a> |
+            <a href="/users">Users</a> |
 
-    <a href="/users/new">
-        Create New User
-    </a>
+            {% if request.state.user %}
+                <span>Welcome, <strong>{{ request.state.user.name }}</strong>!</span> |
+                <a href="/users/{{ request.state.user.id }}">My Profile</a> |
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a> |
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </header>
 
     <hr>
+
+    <h1>All Users</h1>
+
+    {% if request.state.user %}
+        <a href="/users/new">Create New User</a>
+        <br><br>
+    {% endif %}
 
     {% if users %}
 
@@ -36,40 +54,34 @@
 
                     <tr>
 
-                        <td>
-                            {{ user.id }}
-                        </td>
+                        <td>{{ user.id }}</td>
 
                         <td>
-
                             {% if user.profile_pic %}
-
                                 <img
                                     src="/uploads/{{ user.profile_pic }}"
                                     alt="Profile Picture"
                                     width="80"
                                     height="80"
                                 >
-
+                            {% else %}
+                                <span>No Image</span>
                             {% endif %}
-
                         </td>
 
-                        <td>
-                            {{ user.name }}
-                        </td>
+                        <td>{{ user.name }}</td>
 
-                        <td>
-                            {{ user.email }}
-                        </td>
+                        <td>{{ user.email }}</td>
 
-                        <td>
-                            {{ user.bio }}
-                        </td>
+                        <td>{{ user.bio or '' }}</td>
 
                         <td>
                             <a href="/users/{{ user.id }}">
-                                View / Edit
+                                {% if request.state.user and request.state.user.id == user.id %}
+                                    Edit Profile
+                                {% else %}
+                                    View Profile
+                                {% endif %}
                             </a>
                         </td>
 
@@ -83,9 +95,7 @@
 
     {% else %}
 
-        <p>
-            No users found.
-        </p>
+        <p>No users found.</p>
 
     {% endif %}
 

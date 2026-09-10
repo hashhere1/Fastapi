@@ -1,15 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from app.routers import pages
-from app.database import Base, engine
-from app.middleware import TimeTrackingMiddleware
+from app.middleware import TimeTrackingMiddleware, AuthMiddleware
 from app.models.page_visit import PageVisit
 from app.models.user import User
 from fastapi.staticfiles import StaticFiles
+from app.utils.dependencies import LoginRequired
 import uvicorn
 
 app = FastAPI()
 
+@app.exception_handler(LoginRequired)
+async def login_required_handler(request: Request, exc: LoginRequired):
+    return RedirectResponse(
+        url="/login",
+        status_code=303
+    )
+
 app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
+app.add_middleware(AuthMiddleware)
 app.add_middleware(TimeTrackingMiddleware)
 app.include_router(pages.router)
 
