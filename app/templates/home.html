@@ -1,1 +1,38 @@
-<h1>Welcome to Home Page</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <a href="/">Home</a> |
+            <a href="/about">About</a> |
+            <a href="/users">Users</a> |
+
+            {% if request.state.user %}
+                <span>Welcome, <strong>{{ request.state.user.name }}</strong>!</span> |
+                <a href="/users/{{ request.state.user.id }}">My Profile</a> |
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a> |
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <hr>
+
+    <main>
+        <h1>Welcome to Home Page</h1>
+
+        {% if request.state.user %}
+            <p>You are currently logged in as <strong>{{ request.state.user.email }}</strong>.</p>
+        {% else %}
+            <p>Please log in or register to manage your profile.</p>
+        {% endif %}
+    </main>
+
+</body>
+</html>
